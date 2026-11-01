@@ -311,15 +311,15 @@
         }
     },
     {
-        "DisplayName": "Send Crash Reports",
+        "DisplayName": "Send crash reports to the developer",
         "Category": "Everlast:stadia_controller",
         "Subcategory": "Advanced:cog:4",
-        "Description": "Allow the server to send crash and error reports to the developer. Contains no player personal data. Turning it off means crashes on your server are not reported upstream.",
+        "Description": "Off by default in this template. When on, the server reports crashes and errors to the game's developers via Sentry. The server config in this build sets SendDefaultPii=false, so stack traces are sent without player personal data - but that is the game's setting, not a guarantee this template makes. Turn it on only if you are comfortable with crash data leaving your server.",
         "Keywords": "sentry,telemetry,crash,reports,analytics,privacy",
         "FieldName": "SentryEnabled",
         "InputType": "checkbox",
         "ParamFieldName": "$.SentryConfig.Enabled",
-        "DefaultValue": "true",
+        "DefaultValue": "false",
         "EnumValues": {
             "False": "false",
             "True": "true"

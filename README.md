@@ -19,6 +19,7 @@ AMP community after working the template out against the game's own server build
 
 | File | Purpose |
 |---|---|
+| `manifest.json` | Lets AMP add this repo by URL under *Configuration → Instance Deployment* |
 | `everlast.kvp` | Template root: metadata, executable, command line, console regexes, limits |
 | `everlastconfig.json` | Settings manifest — the 23 server settings exposed in the AMP UI |
 | `everlastmetaconfig.json` | Tells AMP which files are importable/auto-mapped |
@@ -28,20 +29,46 @@ AMP community after working the template out against the game's own server build
 
 ## Install
 
-Drop these six files into your deployment templates directory, so that
-`everlast.kvp`, `everlastconfig.json`, `everlastmetaconfig.json`, `everlastports.json`,
-`everlaststart.json` and `everlastupdates.json` sit side by side:
+There are two routes. Pick whichever suits you.
+
+### Option A — add this repo by URL (easiest)
+
+In AMP: **Configuration → Instance Deployment → Configuration Repositories → Add**, then
+give it:
+
+```
+https://github.com/Infected-Game-Hosting/everlast-amp-template
+```
+
+AMP reads `manifest.json` from the repo and pulls the templates automatically. Fetch and
+refresh the template list afterwards and `Everlast` appears as a deployable app.
+
+### Option B — copy the files in
+
+Drop the six template files into your deployment templates directory so they sit side by
+side:
 
 ```
 <AMP-ADS>/Plugins/ADSModule/DeploymentTemplates/<your-templates-repo>/
 ```
 
-Refresh the template list in the ADS and `Everlast` appears as a deployable app. The
-template expects a Linux target with `libicu` present and roughly 1 GB of free disk for
-the server install.
+Then refresh the template list in the ADS.
 
-To pick up the template without a controller restart, use ADS's *Configuration →
-Instance Deployment → Refresh Template List*.
+Either way, use *Configuration → Instance Deployment → Refresh Template List* to pick the
+template up without restarting the controller.
+
+### Requirements
+
+| Requirement | Detail |
+|---|---|
+| **`python3` at `/usr/bin/python3`** | **Required.** The pre-start stage that writes `queryPort` is a Python one-liner. Verified on `cubecoders/ampbase:debian` (3.13) and on a bare Debian host (3.12). If your image lacks it, either install `python3` or delete the pre-start stage and set `queryPort` by hand. |
+| Linux target, x86-64 | The server is a native Linux AOT build. No Wine or Proton. |
+| ~1 GB free disk | Server install is ~950 MB before worlds. |
+| `libicu` | Required by the .NET runtime. Present on standard Debian/Ubuntu images. |
+
+If `python3` is missing and you leave the pre-start stage in place, AMP will fail the
+start stage rather than silently boot with a wrong query port — which is the failure mode
+you want, but it does mean the dependency is not optional.
 
 ## Query port — read this
 
@@ -70,31 +97,76 @@ still applies and you should avoid stacking servers whose ports would collide.
 
 ## Verified measurements
 
-Taken on a Ryzen 9 7950X3D, containerised, reading the game process directly. Useful for
-sizing plans and for sanity-checking your own install.
+Taken on a Ryzen 9 7950X3D (16 cores / 32 threads), containerised, reading the game
+process directly. Useful for sizing plans and for sanity-checking your own install.
 
-| State | CPU | RSS | Threads |
-|---|---|---|---|
-| Empty world, no players | **0.38–0.43 of a core** | ~1.5–1.8 GB | 27–29 |
+| State | CPU used | Memory (RSS) |
+|---|---|---|
+| Empty world, no players | **0.38–0.43 of one core** | ~1.5–1.8 GB |
+
+Read that first number carefully: **under half of a single core**, roughly 1.2% of a
+32-thread machine. For planning, 2 vCPU (one core) is a sensible floor for an empty
+world, not because the server needs two cores but because it needs a full core with
+room to breathe.
+
+> **Thread count is not core usage.** You will see this process holding around 27–29 OS
+> threads, which can look alarming on a 32-thread machine. It is not using them. In a
+> 10-second sample on an empty world, only **3 threads consumed any CPU at all** and the
+> busiest single thread accounted for 0.099 of a core. The rest are parked pool threads
+> the .NET runtime allocates up front. Judge capacity from the CPU figure, never the
+> thread count.
 
 The world simulation — NPCs, physics, chunk streaming — is essentially the entire idle
 cost. A single connected player does not move CPU measurably past that baseline.
 
-The developer's own live-server figures show CPU scaling with player count rather than
-RAM:
+### Scaling with players
 
-| Players | Cores | RAM |
+The developer's figures from live servers, on a JIT build which they describe as heavier
+than the standalone build this template runs:
+
+| Players | CPU | RAM |
 |---|---|---|
-| 0–2 | 0.70 | 2.3–2.8 GB |
-| 11 | 1.00 | 2.6 GB |
-| 25 | 1.25 | 2.8 GB |
-| 45 | 1.65 | 2.9 GB |
-| ~70 | — | ~3.0 GB |
+| 0–2 | 0.70 cores | 2.3–2.8 GB |
+| 11 | 1.00 cores | 2.6 GB |
+| 25 | 1.25 cores | 2.8 GB |
+| 45 | 1.65 cores | 2.9 GB |
+| 95 (peak observed) | 2.00 cores | 3.4–3.6 GB |
 
-**RAM is nearly flat; CPU is what scales.** Roughly 0.019 cores per player between 11 and
-45 players. A 1 vCPU quota is not enough — an empty world already uses ~0.40 of a core,
-so the entry point should be 2 vCPU. Their measurements were on a JIT build on a Ryzen 5
-5600X, described as somewhat heavier than the standalone build this template runs.
+**RAM is nearly flat; CPU is what scales.** Two things worth noting:
+
+- **Marginal cost per player falls as the server fills.** It runs ~0.018–0.020 cores per
+  player between 11 and 45 players, then ~0.014 between 70 and 95. Scaling is sublinear,
+  so sizing from the steep early slope is conservative.
+- **A full 100-player server draws about 2.0–2.1 cores.** Budget one full core per
+  50 players plus roughly 0.4 for the world itself.
+
+A 1 vCPU quota is not enough — an empty world already uses ~0.40 of a core, so the entry
+point should be 2 vCPU. Memory stays near 3.5 GB even at 95 players (with a one-off
+~4.4 GB spike at startup), so a modest RAM allocation goes a long way; spending on cores
+is what buys capacity on this title.
+
+
+## Privacy: crash reporting
+
+**This template defaults crash reporting OFF.** The game ships with Sentry crash reporting
+enabled; the settings manifest here sets it to `false`, so a server built from this
+template does not send anything to the developers unless you turn it on.
+
+Worth knowing if you do enable it — the server's own config in this build is:
+
+```json
+"SentryConfig": {
+  "Enabled": true,
+  "SendDefaultPii": false,
+  "AttachStacktrace": true,
+  "TracesSampleRate": 0.2
+}
+```
+
+`SendDefaultPii: false` means stack traces go without player personal data. That is the
+game's setting, not a guarantee this template makes, and it can change between server
+builds. Treat crash reports as data leaving your machine and decide accordingly — some
+hosts will want them on to help the developers fix crashes, others will not.
 
 ## Notes and known quirks
 
