@@ -1,0 +1,9 @@
+* -text
+
+# Keep template files byte-exact: AMP parses these and CRLF corruption
+# changes behaviour (and CRLF vs LF in .kvp has bitten us before).
+*.kvp -text
+*.json -text
+*.md -text
+*.gitignore -text
+.gitignore -text

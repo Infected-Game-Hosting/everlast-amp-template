@@ -1,0 +1,14 @@
+[
+    {
+        "ConfigFile": "appsettings.json",
+        "AutoMap": true,
+        "Importable": true,
+        "ConfigType": "json"
+    },
+    {
+        "ConfigFile": "Worlds/{{WorldName}}/worldsettings.json",
+        "AutoMap": true,
+        "Importable": true,
+        "ConfigType": "json"
+    }
+]

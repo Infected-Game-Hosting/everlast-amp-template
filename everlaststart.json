@@ -1,0 +1,10 @@
+[
+    {
+        "UpdateStageName": "Set query port",
+        "UpdateSourcePlatform": "Linux",
+        "UpdateSource": "Executable",
+        "UpdateSourceData": "/usr/bin/python3",
+        "UpdateSourceArgs": "-c \"import json,os,sys;p='{{$FullBaseDir}}appsettings.json';d={};os.path.exists(p) and (d:=json.load(open(p)));d.setdefault('NetworkConfig',{})['queryPort']=int('{{$QueryPort}}');json.dump(d,open(p,'w'),indent=2);print('everlast-prestart: queryPort',{{$QueryPort}})\"",
+        "SkipOnFailure": false
+    }
+]

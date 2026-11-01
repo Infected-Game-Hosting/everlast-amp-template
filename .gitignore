@@ -1,0 +1,25 @@
+# OS
+Thumbs.db
+.DS_Store
+desktop.ini
+
+# AMP runtime / instance data — never belongs in a template repo
+*.bak
+*.old
+*.log
+Backups/
+datastore.dat
+configmanifest.json
+geoip-data.mmdb.gz
+
+# Credentials — must never appear here
+*.env
+.env*
+*credentials*
+*secret*
+*.pem
+*.key
+
+# Editors
+.vscode/
+.idea/

@@ -1,0 +1,10 @@
+[
+    {
+        "UpdateStageName": "Everlast Server SteamCMD Download",
+        "UpdateSourcePlatform": "Linux",
+        "UpdateSource": "SteamCMD",
+        "UpdateSourceData": "4268160",
+        "UpdateSourceArgs": "3818450",
+        "SkipOnFailure": false
+    }
+]
