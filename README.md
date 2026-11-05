@@ -10,8 +10,8 @@ AMP community after working the template out against the game's own server build
 
 - Native Linux server via anonymous SteamCMD (`4268160`), so nothing is redistributed
 - **Explicit query port.** This is the important one — see *Query port* below
-- The full 23 settings the server actually exposes, grouped by category, with the
-  difficulty presets the game ships
+- The full 31 settings the server actually exposes, grouped by category, with the
+  difficulty presets the game ships, including respawn scaling and server region
 - Tail-based readiness and join/leave detection from the server log
 - Docker-capable, but works without a container too
 
@@ -21,7 +21,7 @@ AMP community after working the template out against the game's own server build
 |---|---|
 | `manifest.json` | Lets AMP add this repo by URL under *Configuration → Instance Deployment* |
 | `everlast.kvp` | Template root: metadata, executable, command line, console regexes, limits |
-| `everlastconfig.json` | Settings manifest — the 23 server settings exposed in the AMP UI |
+| `everlastconfig.json` | Settings manifest — the 31 server settings exposed in the AMP UI |
 | `everlastmetaconfig.json` | Tells AMP which files are importable/auto-mapped |
 | `everlastports.json` | UDP game port (`9003`) and query port (`27019`) |
 | `everlaststart.json` | Pre-start stage that writes `queryPort` into `appsettings.json` |
@@ -178,10 +178,37 @@ hosts will want them on to help the developers fix crashes, others will not.
 - **Difficulty is fixed at world creation.** The setting is read when a world is created
   and is not re-read afterwards, so changing it on an existing world has no effect. The
   setting's description says so; a new world is required to change difficulty.
-- **`MaxUsers` is 16 by default** in `everlast.kvp`. The game supports far more; raise it
-  if you are selling larger slots. This template ships the stock default deliberately.
+- **`MaxUsers` is 100** in `everlast.kvp`, matching the game's own `MaxPlayers` default and
+  the 1–1000 range the server accepts. These are two separate numbers: `App.MaxUsers` is the
+  panel's cap, `MaxPlayers` in `worldsettings.json` is the game's. Change both together, and
+  note that the panel field writes the game file — it does not move `App.MaxUsers`.
+- **Log level can flood the disk.** `Serilog.MinimumLevel.Default` at `Debug` or `Verbose`
+  grows `server.log` quickly. Leave it at `Information` outside active diagnosis.
 - The server writes `Worlds/<WorldName>/server.log`, which the readiness and join/leave
   regexes tail.
+
+## Settings added in config version 4
+
+Verified against the published server build and the vendor's own `templates/` defaults.
+
+| Setting | Default | Notes |
+|---|---|---|
+| `NetworkConfig.Location` | `Usa` | Cosmetic browser region. Does not affect latency or who can join |
+| `LaunchConfig.AdvertiseServer` | `true` | Off = private server, direct connect only |
+| `RespawnScalingConfig.Enabled` | `true` | Server builds from 29 Oct 2026 |
+| `RespawnScalingConfig.RadiusMeters` | `50` | 1–500 |
+| `RespawnScalingConfig.PerPlayerSpeedup` | `0.5` | 0–10 |
+| `RespawnScalingConfig.MinMultiplier` | `0.25` | 0.05–1 |
+| `TransferExceptionIds` | empty | Comma-separated SteamID64s allowed in despite transfers being off |
+| `Serilog.MinimumLevel.Default` | `Information` | Verbose/Debug/Information/Warning/Error/Fatal |
+
+**`Max Players` now defaults to `100`**, not `16`. The old default produced a fresh server
+that quietly accepted a sixth of the players the game allows.
+
+**`AfkConfig.ThresholdSeconds` is deliberately not exposed.** The vendor documented it in the
+README commit of 3 November 2026, but the public server build (`26380401`, published 2 November
+2026 20:00 UTC) does not contain the setting — the binary has no `AfkConfig` type. Adding a
+field for it would look configured and do nothing. Expose it when a build that contains it ships.
 
 ## Licence and credit
 

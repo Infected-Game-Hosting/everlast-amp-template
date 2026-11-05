@@ -108,7 +108,7 @@
         "FieldName": "MaxPlayers",
         "InputType": "number",
         "ParamFieldName": "$.MaxPlayers",
-        "DefaultValue": "16",
+        "DefaultValue": "100",
         "EnumValues": {},
         "Suffix": "players",
         "MinValue": "1",
@@ -323,6 +323,130 @@
         "EnumValues": {
             "False": "false",
             "True": "true"
+        }
+    },
+    {
+        "DisplayName": "Server Region",
+        "Category": "Everlast:stadia_controller",
+        "Subcategory": "Advanced:cog:4",
+        "Description": "Region shown next to the server in the in-game server browser. Cosmetic only - it does not change latency or which players can join.",
+        "Keywords": "region,location,country,area,browser",
+        "FieldName": "ServerLocation",
+        "InputType": "enum",
+        "ParamFieldName": "$.NetworkConfig.Location",
+        "DefaultValue": "Usa",
+        "EnumValues": {
+            "Usa": "USA / Americas",
+            "Eu": "Europe",
+            "Oce": "Oceania"
+        }
+    },
+    {
+        "DisplayName": "List in Server Browser",
+        "Category": "Everlast:stadia_controller",
+        "Subcategory": "World:world:2",
+        "Description": "When on, the server appears in the in-game public server browser. Turn off for a private server that players may only reach by direct connect.",
+        "Keywords": "advertise,browser,public,listed,directory,private",
+        "FieldName": "AdvertiseServer",
+        "InputType": "checkbox",
+        "ParamFieldName": "$.LaunchConfig.AdvertiseServer",
+        "DefaultValue": "true",
+        "EnumValues": {
+            "False": "false",
+            "True": "true"
+        }
+    },
+    {
+        "DisplayName": "Respawn Scaling",
+        "Category": "Everlast:stadia_controller",
+        "Subcategory": "World:world:2",
+        "Description": "Speeds up monster, NPC, object and gathering-spot respawn timers when several players are close together, so a group does not clear an area and stand around waiting. Added in the 29 October 2026 server build.",
+        "Keywords": "respawn,scaling,spawn,timer,crowd,group",
+        "FieldName": "RespawnScalingEnabled",
+        "InputType": "checkbox",
+        "ParamFieldName": "$.RespawnScalingConfig.Enabled",
+        "DefaultValue": "true",
+        "EnumValues": {
+            "False": "false",
+            "True": "true"
+        }
+    },
+    {
+        "DisplayName": "Respawn Scale Radius",
+        "Category": "Everlast:stadia_controller",
+        "Subcategory": "Server:dns:1",
+        "Description": "How close another player must be to count towards respawn scaling.",
+        "Keywords": "respawn,radius,distance,nearby,metres,meters",
+        "FieldName": "RespawnRadius",
+        "InputType": "number",
+        "ParamFieldName": "$.RespawnScalingConfig.RadiusMeters",
+        "DefaultValue": "50",
+        "EnumValues": {},
+        "MinValue": "1",
+        "MaxValue": "500",
+        "Suffix": "m"
+    },
+    {
+        "DisplayName": "Respawn Speedup Per Player",
+        "Category": "Everlast:stadia_controller",
+        "Subcategory": "Server:dns:1",
+        "Description": "How much each extra player near a spawn speeds its timer up. At 0.5, two players respawn things at 67% of normal, three at 50%, and five or more at the 25% floor.",
+        "Keywords": "respawn,speedup,multiplier,players",
+        "FieldName": "RespawnPerPlayerSpeedup",
+        "InputType": "number",
+        "ParamFieldName": "$.RespawnScalingConfig.PerPlayerSpeedup",
+        "DefaultValue": "0.5",
+        "EnumValues": {},
+        "MinValue": "0",
+        "MaxValue": "10",
+        "Suffix": "x",
+        "MultipleOf": "0.1"
+    },
+    {
+        "DisplayName": "Respawn Speedup Floor",
+        "Category": "Everlast:stadia_controller",
+        "Subcategory": "Server:dns:1",
+        "Description": "The shortest a respawn timer may become, as a fraction of its normal length. 0.25 means never faster than a quarter of the base time.",
+        "Keywords": "respawn,floor,minimum,multiplier,fastest",
+        "FieldName": "RespawnMinMultiplier",
+        "InputType": "number",
+        "ParamFieldName": "$.RespawnScalingConfig.MinMultiplier",
+        "DefaultValue": "0.25",
+        "EnumValues": {},
+        "MinValue": "0.05",
+        "MaxValue": "1",
+        "Suffix": "x",
+        "MultipleOf": "0.05"
+    },
+    {
+        "DisplayName": "Transfer Exceptions",
+        "Category": "Everlast:stadia_controller",
+        "Subcategory": "World:world:2",
+        "Description": "Comma-separated SteamID64 numbers allowed to bring a character in even when 'Accept Character Transfers' is off. Lets you invite specific people to a fresh-start world without opening it to every transfer. Separate from the Import Allowlist.",
+        "Keywords": "transfer,exception,steamid,whitelist,import,exempt",
+        "FieldName": "TransferExceptionIds",
+        "InputType": "text",
+        "ParamFieldName": "$.TransferExceptionIds",
+        "DefaultValue": "",
+        "EnumValues": {}
+    },
+    {
+        "DisplayName": "Log Level",
+        "Category": "Everlast:stadia_controller",
+        "Subcategory": "Advanced:cog:4",
+        "Description": "How much detail the server writes to its log file. Raise to Debug or Verbose only while diagnosing a problem - it grows the log quickly.",
+        "Keywords": "log,logging,level,verbosity,debug,trace",
+        "FieldName": "LogLevel",
+        "InputType": "enum",
+        "ParamFieldName": "$.Serilog.MinimumLevel.Default",
+        "DefaultValue": "Information",
+        "EnumValues": {
+            "Verbose": "Verbose",
+            "Debug": "Debug",
+            "Information": "Information",
+            "Warning": "Warning",
+            "Error": "Error",
+            "Fatal": "Fatal"
         }
     }
 ]
